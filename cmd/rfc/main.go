@@ -17,12 +17,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
 const (
-	releaseBase = "https://github.com/gkk-dev-ops/rfc-cli/releases/latest/download"
+	releasesURL = "https://github.com/gkk-dev-ops/rfc-cli/releases"
 	maxDownload = 100 << 20
 )
 
@@ -88,7 +89,8 @@ func assetName() (string, error) {
 func downloadAndVerify(asset, destination string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	checksums, err := download(ctx, releaseBase+"/"+asset+".sha256")
+	base := releaseDownloadBase()
+	checksums, err := download(ctx, base+"/"+asset+".sha256")
 	if err != nil {
 		return fmt.Errorf("download checksums: %w", err)
 	}
@@ -96,7 +98,7 @@ func downloadAndVerify(asset, destination string) error {
 	if err != nil {
 		return err
 	}
-	archive, err := download(ctx, releaseBase+"/"+asset)
+	archive, err := download(ctx, base+"/"+asset)
 	if err != nil {
 		return fmt.Errorf("download %s: %w", asset, err)
 	}
@@ -124,6 +126,20 @@ func downloadAndVerify(asset, destination string) error {
 		return fmt.Errorf("install binary: %w", err)
 	}
 	return nil
+}
+
+func releaseDownloadBase() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		return downloadBaseForVersion(info.Main.Version)
+	}
+	return downloadBaseForVersion("")
+}
+
+func downloadBaseForVersion(version string) string {
+	if strings.HasPrefix(version, "v") && !strings.ContainsAny(version, "/\\ \t\r\n") {
+		return releasesURL + "/download/" + version
+	}
+	return releasesURL + "/latest/download"
 }
 
 func download(ctx context.Context, url string) ([]byte, error) {

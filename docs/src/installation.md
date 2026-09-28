@@ -37,6 +37,7 @@ go install github.com/gkk-dev-ops/rfc-cli/cmd/rfc@latest
 ```
 
 The Go bootstrap downloads the matching official GitHub release archive, verifies its SHA-256 checksum, caches the binary, and delegates execution to it.
+It resolves the Rust archive from the same version tag used by `go install`, including prerelease tags.
 
 ## From a checkout
 

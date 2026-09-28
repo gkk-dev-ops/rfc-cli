@@ -18,3 +18,19 @@ func TestChecksumForRejectsMissingAsset(t *testing.T) {
 		t.Fatal("expected an error")
 	}
 }
+
+func TestDownloadBaseUsesInstalledModuleVersion(t *testing.T) {
+	got := downloadBaseForVersion("v0.2.0-alpha.1")
+	want := releasesURL + "/download/v0.2.0-alpha.1"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+func TestDownloadBaseFallsBackForDevelopmentBuild(t *testing.T) {
+	got := downloadBaseForVersion("(devel)")
+	want := releasesURL + "/latest/download"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
