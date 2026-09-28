@@ -6,6 +6,8 @@ This project is a Rust rewrite of [wasi-master/rfc-cli](https://github.com/wasi-
 
 > **Status:** `0.2.0-alpha.1`. The Rust CLI works; registry packages and release automation are being prepared and have not been published.
 
+Full documentation is available at [gkk-dev-ops.github.io/rfc-cli](https://gkk-dev-ops.github.io/rfc-cli/).
+
 ## Usage
 
 ```console
@@ -61,7 +63,7 @@ Both tools return structured content with a generated JSON Schema.
 
 ## Installation
 
-The executable is always named `rfc`. The package name is provisionally `rfc-agent-cli` and will be verified before the first public registry release.
+The executable is always named `rfc`. The package name is `rfc-agent-cli` on Cargo, PyPI, and npm.
 
 ### Cargo
 

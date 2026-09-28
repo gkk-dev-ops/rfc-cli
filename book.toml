@@ -1,0 +1,17 @@
+[book]
+title = "rfc-agent-cli"
+description = "Agent-friendly CLI and MCP server for authoritative IETF RFCs"
+authors = ["Grzegorz Kaczmarek", "Arian Mollik Wasi"]
+language = "en"
+src = "docs/src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/gkk-dev-ops/rfc-cli"
+edit-url-template = "https://github.com/gkk-dev-ops/rfc-cli/edit/main/{path}"
+site-url = "/rfc-cli/"
+default-theme = "navy"
+preferred-dark-theme = "navy"
