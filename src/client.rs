@@ -134,9 +134,25 @@ impl RfcClient {
         if response.status() == reqwest::StatusCode::NOT_FOUND {
             return Err(Error::NotFound(url.to_owned()));
         }
-        let response = response.error_for_status()?;
-        let content = response.text().await?;
-        self.cache.write(key, &content).await?;
+        let response = match response.error_for_status() {
+            Ok(response) => response,
+            Err(error) => {
+                return cached
+                    .map(|content| (content, CacheSource::StaleCache))
+                    .ok_or(Error::Network(error));
+            }
+        };
+        let content = match response.text().await {
+            Ok(content) => content,
+            Err(error) => {
+                return cached
+                    .map(|content| (content, CacheSource::StaleCache))
+                    .ok_or(Error::Network(error));
+            }
+        };
+        if let Err(error) = self.cache.write(key, &content).await {
+            eprintln!("warning: {error}");
+        }
         Ok((content, CacheSource::Network))
     }
 }

@@ -48,7 +48,10 @@ impl FromStr for DocumentId {
             return Err(Error::InvalidIdentifier(input.to_owned()));
         }
 
-        if value.len() >= 6 && value[..6].eq_ignore_ascii_case("draft-") {
+        if value
+            .get(..6)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("draft-"))
+        {
             let normalized = value.to_ascii_lowercase();
             if normalized
                 .chars()
@@ -111,6 +114,7 @@ mod tests {
     fn rejects_unsafe_or_empty_identifiers() {
         assert!("../9110".parse::<DocumentId>().is_err());
         assert!("draft-foo/bar".parse::<DocumentId>().is_err());
+        assert!("aééé".parse::<DocumentId>().is_err());
         assert!("0".parse::<DocumentId>().is_err());
     }
 }

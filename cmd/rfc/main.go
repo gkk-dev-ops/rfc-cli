@@ -54,7 +54,8 @@ func installedBinary() (string, error) {
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
-	binary := filepath.Join(cacheRoot, "rfc-agent-cli", "bootstrap", name)
+	releaseTag := installedReleaseTag()
+	binary := filepath.Join(cacheRoot, "rfc-agent-cli", "bootstrap", releaseTag, name)
 	if _, err := os.Stat(binary); err == nil && os.Getenv("RFC_BOOTSTRAP_REFRESH") != "1" {
 		return binary, nil
 	}
@@ -62,7 +63,7 @@ func installedBinary() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := downloadAndVerify(asset, binary); err != nil {
+	if err := downloadAndVerify(asset, binary, downloadBaseForVersion(releaseTag)); err != nil {
 		return "", err
 	}
 	return binary, nil
@@ -86,10 +87,9 @@ func assetName() (string, error) {
 	return "", fmt.Errorf("unsupported platform %s/%s", runtime.GOOS, runtime.GOARCH)
 }
 
-func downloadAndVerify(asset, destination string) error {
+func downloadAndVerify(asset, destination, base string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
-	base := releaseDownloadBase()
 	checksums, err := download(ctx, base+"/"+asset+".sha256")
 	if err != nil {
 		return fmt.Errorf("download checksums: %w", err)
@@ -109,7 +109,14 @@ func downloadAndVerify(asset, destination string) error {
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return fmt.Errorf("create cache directory: %w", err)
 	}
-	temporary := destination + ".tmp"
+	temporaryFile, err := os.CreateTemp(filepath.Dir(destination), ".rfc-*.tmp")
+	if err != nil {
+		return fmt.Errorf("create temporary executable: %w", err)
+	}
+	temporary := temporaryFile.Name()
+	if err := temporaryFile.Close(); err != nil {
+		return fmt.Errorf("close temporary executable: %w", err)
+	}
 	defer os.Remove(temporary)
 	if strings.HasSuffix(asset, ".zip") {
 		err = extractZip(archive, temporary)
@@ -123,23 +130,32 @@ func downloadAndVerify(asset, destination string) error {
 		return fmt.Errorf("mark binary executable: %w", err)
 	}
 	if err := os.Rename(temporary, destination); err != nil {
+		if _, statErr := os.Stat(destination); statErr == nil {
+			return nil
+		}
 		return fmt.Errorf("install binary: %w", err)
 	}
 	return nil
 }
 
-func releaseDownloadBase() string {
+func installedReleaseTag() string {
 	if info, ok := debug.ReadBuildInfo(); ok {
-		return downloadBaseForVersion(info.Main.Version)
+		if isReleaseVersion(info.Main.Version) {
+			return info.Main.Version
+		}
 	}
-	return downloadBaseForVersion("")
+	return "latest"
 }
 
 func downloadBaseForVersion(version string) string {
-	if strings.HasPrefix(version, "v") && !strings.ContainsAny(version, "/\\ \t\r\n") {
+	if isReleaseVersion(version) {
 		return releasesURL + "/download/" + version
 	}
 	return releasesURL + "/latest/download"
+}
+
+func isReleaseVersion(version string) bool {
+	return strings.HasPrefix(version, "v") && !strings.ContainsAny(version, "/\\ \t\r\n")
 }
 
 func download(ctx context.Context, url string) ([]byte, error) {

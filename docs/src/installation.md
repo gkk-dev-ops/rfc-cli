@@ -2,6 +2,8 @@
 
 The registry package is named `rfc-agent-cli`; the installed command is always `rfc`.
 
+> The registry commands below become available after the first public release. Until then, install from a checkout as described at the end of this page.
+
 ## Cargo
 
 ```console

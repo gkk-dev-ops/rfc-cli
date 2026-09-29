@@ -9,7 +9,7 @@ use rmcp::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{DocumentId, DocumentResponse, MetadataResponse, RfcClient};
+use crate::{DocumentId, DocumentResponse, Error, MetadataResponse, RfcClient};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct DocumentRequest {
@@ -39,6 +39,13 @@ impl RfcMcpServer {
     fn internal(error: impl ToString) -> McpError {
         McpError::internal_error(error.to_string(), None)
     }
+
+    fn client_error(error: Error) -> McpError {
+        match error.code() {
+            "INVALID_INPUT" => Self::invalid(error),
+            _ => Self::internal(error),
+        }
+    }
 }
 
 #[tool_router]
@@ -61,7 +68,7 @@ impl RfcMcpServer {
             .await
             .map(|response| response.page(request.offset_chars, max_chars))
             .map(Json)
-            .map_err(Self::internal)
+            .map_err(Self::client_error)
     }
 
     #[tool(
@@ -77,7 +84,7 @@ impl RfcMcpServer {
             .metadata(&id)
             .await
             .map(Json)
-            .map_err(Self::internal)
+            .map_err(Self::client_error)
     }
 }
 

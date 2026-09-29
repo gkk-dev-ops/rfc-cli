@@ -34,3 +34,16 @@ func TestDownloadBaseFallsBackForDevelopmentBuild(t *testing.T) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
 }
+
+func TestReleaseVersionValidation(t *testing.T) {
+	for _, version := range []string{"v0.2.0", "v0.2.0-alpha.1"} {
+		if !isReleaseVersion(version) {
+			t.Fatalf("expected %q to be a release version", version)
+		}
+	}
+	for _, version := range []string{"", "(devel)", "latest", "v0.2.0/other"} {
+		if isReleaseVersion(version) {
+			t.Fatalf("expected %q to be rejected", version)
+		}
+	}
+}
