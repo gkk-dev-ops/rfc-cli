@@ -1,0 +1,32 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "rfc-agent-cli"
+requires-python = ">=3.9"
+dynamic = ["version"]
+description = "Agent-friendly CLI and MCP server for IETF RFCs"
+readme = "README.md"
+license = "MIT"
+authors = [
+  { name = "Arian Mollik Wasi" },
+  { name = "Grzegorz Kaczmarek" },
+]
+classifiers = [
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Rust",
+  "Topic :: Internet",
+]
+
+[project.urls]
+Repository = "https://github.com/gkk-dev-ops/rfc-cli"
+Issues = "https://github.com/gkk-dev-ops/rfc-cli/issues"
+
+[tool.maturin]
+bindings = "bin"
+strip = true
